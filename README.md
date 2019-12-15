@@ -11,11 +11,12 @@ pip install gpam_training
 
 ### Multilabel training
 
-First of all, it is needed to have in memory a dataframe from pandas based on a csv in the following format:
+First of all, it is needed to have in memory a dataframe from pandas.
+The csv must be in the following format:
 
 ```csv
-process_id, page_text_extract, tema
-1,Lorem ipsum dolor sit amet, 1
+process_id,page_text_extract,tema
+1,Lorem ipsum dolor sit amet,1
 2,Lorem ipsum dolor sit amet,2
 2,Lorem ipsum dolor sit amet,3
 42,Lorem ipsum dolor sit amet,2
