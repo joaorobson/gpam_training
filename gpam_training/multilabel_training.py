@@ -1,7 +1,7 @@
 import pickle
 import pandas as pd
 import numpy as np
-from dataframe_preprocessing import DataframePreprocessing 
+from .dataframe_preprocessing import DataframePreprocessing 
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
@@ -30,10 +30,11 @@ class MultilabelTraining():
         return X_train, X_test, y_train, y_test
 
     def _vectorize(self, X_train):
+        print('Vectorizing...')
         return self.vectorizer.fit_transform(X_train)
     
     def train(self, split_df=False):
-        print(self.x_column_name, self.y_columns_names, self.df.columns)
+        print('Training...')
         X_train, y_train = self.df[self.x_column_name], self.df[self.y_columns_names]
         if split_df:
             X_train, X_test, y_train, y_test = self._split(X_train, y_train)
