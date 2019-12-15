@@ -4,4 +4,4 @@ Module to facilitate the integration of a sklearn training pipeline into a deplo
 
 from .multilabel_training import MultilabelTraining
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"

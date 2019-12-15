@@ -12,3 +12,4 @@ requires = [
 	"pandas==0.24.2",
 	"scikit-learn==0.22"
 ]
+description-file="README.rst"
