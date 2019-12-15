@@ -1,7 +1,7 @@
 import pickle
 import pandas as pd
 import numpy as np
-from preprocessing import DataframePreprocessing 
+from dataframe_preprocessing import DataframePreprocessing 
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
