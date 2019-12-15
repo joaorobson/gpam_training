@@ -5,11 +5,10 @@ build-backend = "flit_core.buildapi"
 [tool.flit.metadata]
 module = "gpam_training"
 author = "João Robson"
+home-page = "https://github.com/joaorobson/gpam_training"
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 requires = [
 	"numpy==1.17.4",
 	"pandas==0.24.2",
 	"scikit-learn==0.22"
 ]
-
-
