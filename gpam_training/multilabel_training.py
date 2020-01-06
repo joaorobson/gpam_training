@@ -149,7 +149,7 @@ class MultilabelTraining:
                 self.df[self.target_themes + [self.other_themes_value]],
             )
             vector = self._vectorize(X_train)
-            self.mo_classifier.partial_fit(vector, y_train, classes=classes)
+            self.mo_classifier.partial_fit(vector.toarray(), y_train, classes=classes)
             nrows += len(df) 
             print('{} rows already trained\n'.format(nrows))
             clear_output(wait=True)
