@@ -1,5 +1,5 @@
 import pickle
-from utils import (GpamTokenizer,
+from .utils import (GpamTokenizer,
                    cnn_pecas_model,
                    CallBack,
                    Y_transform,
@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 
 DEFAULT_VOCAB = pickle.loads(
-    open("./default_vocab/vocab_112_bag.pk", "rb").read()
+    open("./gpam_training/default_vocab/vocab_112_bag.pk", "rb").read()
 )
 TYPE_PECAS = "Tag Mapeada"
 BODY = "text"
