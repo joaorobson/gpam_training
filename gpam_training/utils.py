@@ -50,7 +50,7 @@ class GpamTokenizer:
         self.list_2_dict()
         result_texts = []
         for i in tqdm(range(len(self.texts))):
-            tokens = self.return_tokens(self.texts[i])
+            tokens = self.return_tokens(self.texts.iloc[i])
             result_transform = self.transform_tokens(tokens)
             result_texts.append(result_transform)
 
@@ -93,14 +93,17 @@ class Y_transform:
     def __init__(self, y_all):
         self.y_all = y_all
         self.le = preprocessing.LabelEncoder()
-        self.le.fit(set(y_all))
+        self.le.fit(list(set(y_all)))
 
     def transform(self, y):
-        return self.le.transform(y)
+        y_temp = self.le.transform(y)
+        y_temp = np.transpose(y_temp)
+        y_temp = tf.keras.utils.to_categorical(y_temp)
+        return y_temp
 
 
 class CallBack(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
-        if(logs.get('acc') >= 0.98):
+        if(logs.get('acc') and logs.get('acc') >= 0.98):
             print("\nReached 95% accuracy so cancelling training!")
             self.model.stop_training = True

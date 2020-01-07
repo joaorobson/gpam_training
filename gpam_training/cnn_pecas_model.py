@@ -48,7 +48,6 @@ class PecasModel:
 
         if split_df:
             X_train, X_test, Y_train, Y_test = self._split(X_train, Y_train)
-
         y_transform = Y_transform(self.dataframe[TYPE_PECAS])
         Y_train = y_transform.transform(Y_train)
         vector = self._tokenize(X_train)
