@@ -1,6 +1,7 @@
 import pickle
 import pandas as pd
 import numpy as np
+from .metrics import get_multilabel_metrics
 from .dataframe_preprocessing import DataframePreprocessing
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.multioutput import MultiOutputClassifier
@@ -39,7 +40,7 @@ class MultilabelTraining:
         print("Vectorizing...")
         return self.vectorizer.fit_transform(X_train)
 
-    def train(self, split_df=False):
+    def train(self, split_df=True):
         print("Training...")
         X_train, y_train = (
             self.df[self.x_column_name],
@@ -49,6 +50,12 @@ class MultilabelTraining:
             X_train, X_test, y_train, y_test = self._split(X_train, y_train)
         vector = self._vectorize(X_train)
         self.mo_classifier.fit(vector, y_train)
+        if split_df:
+            y_pred = self.mo_classifier.predict(y_test)
+            metrics = get_multilabel_metrics(y_test, y_pred)
+            return metrics
+        return None
+
 
     def get_pickle(self):
         return pickle.dumps(self.mo_classifier)

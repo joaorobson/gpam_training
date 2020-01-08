@@ -3,5 +3,6 @@ Module to facilitate the integration of a sklearn training pipeline into a deplo
 """
 
 from .multilabel_training import MultilabelTraining
+from .metricts import *
 
 __version__ = "0.0.5"
