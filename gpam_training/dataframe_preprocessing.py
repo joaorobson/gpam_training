@@ -41,24 +41,54 @@ class DataframePreprocessing:
 
     def __init__(
         self,
-        df,
+        df=pd.DataFrame(),
+        group_processes=True,
         x_column_name="page_text_extract",
         y_column_name="tema",
         target_themes=DEFAULT_TARGET_THEMES,
         other_themes_value=OTHER_THEMES_VALUE,
+        is_incremental_training=False,
+        is_parquet=False,
+        labels_freq={}
     ):
+        self.is_incremental_training = is_incremental_training
+        self.is_parquet = is_parquet
         self.x_column_name = x_column_name
         self.y_column_name = y_column_name
         self.other_themes_value = other_themes_value
         self.target_themes = target_themes
+        self.group_processes = group_processes
 
-        self._group_samples_by_process(df.copy())
+        self.distinct_themes = target_themes + [other_themes_value]
+        if not df.empty:
 
-        self.target_themes.sort()
-        self.labels_freq = {}
+            self._generate_themes_column(df.copy())
 
-        self._set_labels_frequency()
-        self.processed_df = self._process_dataframe()
+            self.target_themes.sort()
+            self.labels_freq = {}
+
+            if not labels_freq:
+                self._set_labels_frequency()
+            else:
+                self.labels_freq = labels_freq
+            self.processed_df = self._process_dataframe()
+
+    def _generate_themes_column(self, df):
+        if self.group_processes:
+            self._group_samples_by_process(df)
+        else:
+            if not self.is_parquet:
+                self.df = df
+                #self.df[self.y_column_name] = self.df[self.y_column_name].apply(lambda x: np.array(x))
+                #self._transform_array_column(df)
+            else:
+                self.df = df
+                self.df[self.y_column_name] = self.df[self.y_column_name].apply(lambda x: np.array(x))
+
+    def _transform_array_column(self, df):
+        print('Tranforming themes strings to arrays...')
+        df[self.y_column_name] = df[self.y_column_name].apply(lambda l: np.fromstring(l[1:-1], sep=' '))
+        self.df = df
 
     def _group_samples_by_process(self, df):
         print("Grouping processes...")
@@ -109,21 +139,65 @@ class DataframePreprocessing:
             else:
                 self.labels_freq[normalized_label] += 1
 
+    def get_labels_frequency(self, series):
+        print("Setting labels frequency...")
+        labels_freq = {}
+        for label in series:
+            normalized_label = tuple(self._switch_other_themes_values(label))
+
+            if not labels_freq.get(normalized_label):
+                labels_freq[normalized_label] = 1
+            else:
+                labels_freq[normalized_label] += 1
+        return labels_freq
+
     def _get_distinct_themes(self):
-        distinct_themes = set()
-        for label in self.df["labels_with_others"]:
-            for theme in label:
-                distinct_themes.add(theme)
-        self.distinct_themes = list(sorted(distinct_themes))
+        if self.is_incremental_training:
+            self.distinct_themes = self.target_themes + [self.other_themes_value]
+        else:
+            distinct_themes = set()
+            for label in self.df["labels_with_others"]:
+                for theme in label:
+                    distinct_themes.add(theme)
+            self.distinct_themes = list(sorted(distinct_themes))
+
+    # TODO: Include case when themes are not grouped
+    def get_unique_binarized_labels(self, df_path, y_column_name, is_parquet=False):
+        print('Generating set of binarized labels...')
+        if not is_parquet:
+            themes = pd.read_csv(df_path, usecols=[y_column_name])
+            themes[y_column_name] = themes[y_column_name].apply(lambda l: np.fromstring(l[1:-1], sep=' '))
+        else:
+            themes = pd.read_parquet(df_path, columns=[y_column_name])
+            themes[self.y_column_name] = themes[self.y_column_name].apply(lambda x: np.array(x))
+
+        labels_freq = self.get_labels_frequency(themes[self.y_column_name])
+        
+        themes["labels_with_others"] = themes[y_column_name].apply(
+            self._normalize_labels
+        )
+
+        mlb = MultiLabelBinarizer()
+        binarized_columns = mlb.fit_transform(
+            themes["labels_with_others"].to_numpy()
+        )
+        unique_labels = []
+
+        for bin_label in binarized_columns:
+            if bin_label.tolist() not in unique_labels:
+                unique_labels.append(bin_label.tolist())
+
+        return unique_labels, labels_freq
 
     def _binarize_labels(self):
         print("Binarizing labels...")
-        mlb = MultiLabelBinarizer()
+        self._get_distinct_themes()
+        mlb = MultiLabelBinarizer(classes=self.distinct_themes)
         binarized_columns = mlb.fit_transform(
             self.df["labels_with_others"].to_numpy()
         )
 
-        self._get_distinct_themes()
+
         columns_names = {
             ix: binarized_columns[:, i]
             for i, ix in enumerate(self.distinct_themes)
@@ -135,6 +209,8 @@ class DataframePreprocessing:
         )
 
     def _process_dataframe(self):
+        self.df = self.df[~pd.isnull(self.df[self.x_column_name])]
+
         self.df["labels_with_others"] = self.df[self.y_column_name].apply(
             self._normalize_labels
         )
