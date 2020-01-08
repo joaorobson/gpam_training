@@ -1,11 +1,14 @@
 import pickle
+import numpy as np
 from .utils import (GpamTokenizer,
                    cnn_pecas_model,
                    CallBack,
                    Y_transform,
+                   binarize_pred
                    )
 from sklearn.model_selection import train_test_split
-
+from sklearn.metrics import classification_report
+from sklearn import preprocessing
 
 DEFAULT_VOCAB = pickle.loads(
     open("./gpam_training/default_vocab/vocab_112_bag.pk", "rb").read()
@@ -54,6 +57,30 @@ class PecasModel:
         callback = CallBack()
         self.classifier.fit(vector, Y_train, batch_size=batch_size,
                             epochs=epochs, callbacks=[callback])
+        if split_df:
+            return self.metrics(X_test, Y_test)
 
     def return_model(self):
         return self.classifier.to_json()
+
+    def metrics(self, X_test, Y_test):
+        X_test = self._tokenize(X_test)
+        pred = self.classifier.predict(X_test, verbose=1)
+        new_pred = binarize_pred(pred)
+        
+        lb = preprocessing.LabelBinarizer()
+        lb.fit(list(set(self.dataframe["Tag Mapeada"])))
+        lb.inverse_transform(np.asarray(new_pred))
+        
+        le = preprocessing.LabelEncoder()
+        le.fit(list(set(self.dataframe['Tag Mapeada'])))
+        a = [each for each in enumerate(le.classes_)] 
+        print(a)
+        pred_y = le.transform(lb.inverse_transform(np.asarray(new_pred)))
+
+        y_transform = Y_transform(self.dataframe[TYPE_PECAS])
+        Y_test = y_transform.transform(Y_test)
+        Y_test = le.transform(lb.inverse_transform(Y_test))
+
+        return classification_report(Y_test, pred_y, output_dict=True)
+
