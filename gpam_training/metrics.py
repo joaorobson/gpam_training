@@ -1,3 +1,9 @@
+import numpy as np
+from sklearn.metrics import classification_report, accuracy_score, \
+                            f1_score, precision_score, recall_score, hamming_loss, \
+                            jaccard_score
+
+
 def hit_one(y_true, y_pred):
     score = []
     for pred, true in zip(y_pred, y_true):

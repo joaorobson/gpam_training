@@ -105,7 +105,8 @@ class MultilabelTraining:
         vector = self._vectorize(self.X_train)
         self.mo_classifier.fit(vector, self.y_train)
         if split_df:
-            self.y_pred = self.mo_classifier.predict(self.y_test)
+            vector_test = self._vectorize(self.X_test)
+            self.y_pred = self.mo_classifier.predict(vector_test)
             metrics = get_multilabel_metrics(self.y_test, self.y_pred)
             return metrics
         return None
