@@ -40,7 +40,7 @@ class MultilabelTraining:
         print("Vectorizing...")
         return self.vectorizer.fit_transform(X_train)
 
-    def train(self, split_df=True):
+    def train(self, split_df=False):
         print("Training...")
         X_train, y_train = (
             self.df[self.x_column_name],
