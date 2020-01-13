@@ -10,14 +10,11 @@ from fastparquet import ParquetFile
 from IPython.display import clear_output
 
 
-
-
 class MultilabelTraining:
 
     X_COLUMN_NAME = "page_text_extract"
 
     DEFAULT_TARGET_THEMES = [
-        0,
         5,
         6,
         26,
@@ -59,9 +56,13 @@ class MultilabelTraining:
         vectorizer=HashingVectorizer(n_features=2 ** 14),
         target_themes=DEFAULT_TARGET_THEMES,
         other_themes_value=OTHER_THEMES_VALUE,
-        is_incremental_training=False
+        remove_processes_without_theme=True,
+        is_incremental_training=False,
+        vocab_path="",
     ):
         self.is_incremental_training = is_incremental_training
+        self.vocab_path = vocab_path
+        self.remove_processes_without_theme = remove_processes_without_theme
         self.mo_classifier = MultiOutputClassifier(classifier, n_jobs=-1)
         self.classifier = classifier
         self.vectorizer = vectorizer
@@ -72,12 +73,17 @@ class MultilabelTraining:
         self._initialize_dataframe(df)
 
     def _initialize_dataframe(self, df):
-        if not df.empty: 
-            self.dp = DataframePreprocessing(df.copy(), 
-                                             group_processes=self.group_processes, 
-                                             target_themes=self.target_themes, 
-                                             other_themes_value=self.other_themes_value,
-                                             is_incremental_training=self.is_incremental_training)
+        if not df.empty:
+            self.dp = DataframePreprocessing(
+                df.copy(),
+                group_processes=self.group_processes,
+                x_column_name=self.x_column_name,
+                target_themes=self.target_themes,
+                other_themes_value=self.other_themes_value,
+                is_incremental_training=self.is_incremental_training,
+                remove_processes_without_theme=self.remove_processes_without_theme,
+                vocab_path=self.vocab_path,
+            )
             self.y_columns_names = self.dp.distinct_themes
             self.df = self.dp.processed_df
         else:
@@ -104,29 +110,41 @@ class MultilabelTraining:
         vector = self._vectorize(self.X_train)
         self.mo_classifier.fit(vector, self.y_train)
 
-    
-    def _update_dataframe(self, df, is_incremental_training=True, is_parquet=False, labels_freq={}):
-        self.dp = DataframePreprocessing(df.copy(), 
-                                         x_column_name=self.x_column_name,
-                                         group_processes=self.group_processes, 
-                                         target_themes=self.target_themes, 
-                                         other_themes_value=self.other_themes_value,
-                                         is_incremental_training=is_incremental_training,
-                                         is_parquet=is_parquet,
-                                         labels_freq=labels_freq)
+    def _update_dataframe(
+        self, df, is_incremental_training=True, is_parquet=False, labels_freq={}
+    ):
+        self.dp = DataframePreprocessing(
+            df.copy(),
+            x_column_name=self.x_column_name,
+            group_processes=self.group_processes,
+            target_themes=self.target_themes,
+            other_themes_value=self.other_themes_value,
+            is_incremental_training=is_incremental_training,
+            remove_processes_without_theme=self.remove_processes_without_theme,
+            is_parquet=is_parquet,
+            vocab_path=self.vocab_path,
+            labels_freq=labels_freq,
+        )
         self.df = self.dp.processed_df
-
 
     def incremental_train(self, df_path, nrows=5000):
         print("Training incrementally...")
         columns_names = pd.read_csv(df_path, nrows=1).columns.tolist()
         skiprows = 1
-        classes, _ = DataframePreprocessing().get_unique_binarized_labels(df_path, "tema")
+        classes, labels_freq = DataframePreprocessing(
+            target_themes=self.target_themes
+        ).get_unique_binarized_labels(df_path, "tema")
         while True:
-            df = pd.read_csv(df_path, nrows=nrows, skiprows=skiprows, header=None, names=columns_names)
+            df = pd.read_csv(
+                df_path,
+                nrows=nrows,
+                skiprows=skiprows,
+                header=None,
+                names=columns_names,
+            )
             if df.empty:
                 break
-            self._update_dataframe(df)
+            self._update_dataframe(df, labels_freq=labels_freq)
             X_train, y_train = (
                 self.df[self.x_column_name],
                 self.df[self.target_themes + [self.other_themes_value]],
@@ -134,13 +152,15 @@ class MultilabelTraining:
             vector = self._vectorize(X_train)
             self.mo_classifier.partial_fit(vector, y_train, classes=classes)
             skiprows += nrows
-            print('{} rows already trained\n'.format(skiprows - 1))
-    
+            print("{} rows already trained\n".format(skiprows - 1))
+
     def incremental_train_with_parquet(self, parquet_path):
         print("Training incrementally with parquet...")
         nrows = 0
         pf = ParquetFile(parquet_path)
-        classes, labels_freq = DataframePreprocessing().get_unique_binarized_labels(parquet_path, "tema", True)
+        classes, labels_freq = DataframePreprocessing(
+            target_themes=self.target_themes
+        ).get_unique_binarized_labels(parquet_path, "tema", True)
         for df in pf.iter_row_groups():
             df = df.reset_index()
             self._update_dataframe(df, is_parquet=True, labels_freq=labels_freq)
@@ -150,13 +170,13 @@ class MultilabelTraining:
             )
             vector = self._vectorize(X_train)
             self.mo_classifier.partial_fit(vector.toarray(), y_train, classes=classes)
-            nrows += len(df) 
-            print('{} rows already trained\n'.format(nrows))
+            nrows += len(self.df)
+            print("{} rows already trained\n".format(nrows))
             clear_output(wait=True)
 
     def predict(self):
-        return self.mo_classifier.predict(self._vectorize(self.X_test))
-        
+        return self.mo_classifier.predict(self._vectorize(self.X_test).todense())
+
     def set_X_test(self, X):
         self.X_test = X
 
