@@ -67,3 +67,5 @@ urllib3==1.25.7
 wcwidth==0.1.8
 Werkzeug==0.16.0
 wrapt==1.11.2
+flit==2.1.0
+fastparquet==0.3.2
