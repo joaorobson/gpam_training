@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 from .utils import (GpamTokenizer,
-                   cnn_pecas_model,
+                   cnn_pecas_model2,
                    CallBack,
                    Y_transform,
                    binarize_pred
@@ -11,7 +11,7 @@ from sklearn.metrics import classification_report
 from sklearn import preprocessing
 
 DEFAULT_VOCAB = pickle.loads(
-    open("./gpam_training/default_vocab/vocab_112_bag.pk", "rb").read()
+    open("./default_vocab/vocab_112_bag.pk", "rb").read()
 )
 TYPE_PECAS = "Tag Mapeada"
 BODY = "text"
@@ -26,7 +26,7 @@ class PecasModel:
         self.vocab = vocab
         if classifier is None:
             n_classes = len(self.dataframe[TYPE_PECAS].unique())
-            self.classifier = cnn_pecas_model(n_classes, MAX_FEATURES,
+            self.classifier = cnn_pecas_model2(n_classes, MAX_FEATURES,
                                               SEQUENCE_LEN, EMBEDDING_OUT)
 
         else:
@@ -61,7 +61,12 @@ class PecasModel:
             return self.metrics(X_test, Y_test)
 
     def return_model(self):
-        return self.classifier.to_json()
+        model = self.classifier.to_json()
+        self.classifier.save_weights("/tmp/weights.h5")
+        weights_file = open("/tmp/weights.h5", "rb")
+        weights = weights_file.read()
+        weights_file.close()
+        return model, weights
 
     def metrics(self, X_test, Y_test):
         X_test = self._tokenize(X_test)
