@@ -11,7 +11,7 @@ from sklearn.metrics import classification_report
 from sklearn import preprocessing
 
 DEFAULT_VOCAB = pickle.loads(
-    open("./gpam_training/default_vocab/vocab_112_bag.pk", "rb").read()
+    open("./default_vocab/vocab_112_bag.pk", "rb").read()
 )
 TYPE_PECAS = "Tag Mapeada"
 BODY = "text"
