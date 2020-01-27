@@ -55,7 +55,7 @@ class MultilabelTraining:
         df=pd.DataFrame(),
         x_column_name=X_COLUMN_NAME,
         group_processes=True,
-        classifier=xgb.XGBClassifier(max_depth=15, random_state=42, n_jobs=-1),
+        classifier=XGBClassifier(max_depth=15, random_state=42, n_jobs=-1),
         vectorizer=HashingVectorizer(n_features=2 ** 14),
         target_themes=DEFAULT_TARGET_THEMES,
         other_themes_value=OTHER_THEMES_VALUE,
