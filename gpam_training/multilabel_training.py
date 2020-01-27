@@ -5,9 +5,11 @@ from .metrics import get_multilabel_metrics
 from .dataframe_preprocessing import DataframePreprocessing
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.multioutput import MultiOutputClassifier
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.model_selection import train_test_split
 from fastparquet import ParquetFile
+from xgboost import XGBClassifier
 from IPython.display import clear_output
 
 
@@ -53,7 +55,7 @@ class MultilabelTraining:
         df=pd.DataFrame(),
         x_column_name=X_COLUMN_NAME,
         group_processes=True,
-        classifier=PassiveAggressiveClassifier(random_state=42),
+        classifier=xgb.XGBClassifier(max_depth=15, random_state=42, n_jobs=-1),
         vectorizer=HashingVectorizer(n_features=2 ** 14),
         target_themes=DEFAULT_TARGET_THEMES,
         other_themes_value=OTHER_THEMES_VALUE,
@@ -64,7 +66,7 @@ class MultilabelTraining:
         self.is_incremental_training = is_incremental_training
         self.vocab_path = vocab_path
         self.remove_processes_without_theme = remove_processes_without_theme
-        self.mo_classifier = MultiOutputClassifier(classifier, n_jobs=-1)
+        self.mo_classifier = OneVsRestClassifier(classifier)
         self.classifier = classifier
         self.vectorizer = vectorizer
         self.target_themes = target_themes
