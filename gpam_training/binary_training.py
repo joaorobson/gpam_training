@@ -56,6 +56,7 @@ class BinaryTraining:
         self,
         df=pd.DataFrame(),
         x_column_name=X_COLUMN_NAME,
+        y_column_name=Y_COLUMN_NAME,
         group_processes=True,
         classifier=XGBClassifier(max_depth=15, random_state=42, n_jobs=-1),
         vectorizer=HashingVectorizer(n_features=2 ** 14),
@@ -74,24 +75,26 @@ class BinaryTraining:
         self.other_themes_value = other_themes_value
         self.group_processes = group_processes
         self.x_column_name = x_column_name
+        self.y_column_name = y_column_name
         self._initialize_dataframe(df)
+        self._separate_themes_no_themes(self.df)
 
-    # def _initialize_dataframe(self, df):
-    #    if not df.empty:
-    #        self.dp = DataframePreprocessing(
-    #            df.copy(),
-    #            group_processes=self.group_processes,
-    #            x_column_name=self.x_column_name,
-    #            target_themes=self.target_themes,
-    #            other_themes_value=self.other_themes_value,
-    #            is_incremental_training=self.is_incremental_training,
-    #            remove_processes_without_theme=self.remove_processes_without_theme,
-    #            vocab_path=self.vocab_path,
-    #        )
-    #        self.y_columns_names = self.dp.distinct_themes
-    #        self.df = self.dp.processed_df
-    #    else:
-    #        self.df = df
+    def _initialize_dataframe(self, df):
+       if not df.empty:
+           self.dp = DataframePreprocessing(
+               df.copy(),
+               group_processes=self.group_processes,
+               x_column_name=self.x_column_name,
+               target_themes=self.target_themes,
+               other_themes_value=self.other_themes_value,
+               is_incremental_training=self.is_incremental_training,
+               remove_processes_without_theme=self.remove_processes_without_theme,
+               vocab_path=self.vocab_path,
+           )
+           self.y_columns_names = self.dp.distinct_themes
+           self.df = self.dp.processed_df
+       else:
+           self.df = df
 
     def _split(self, X, y):
         print("Splitting dataset...")
@@ -103,7 +106,7 @@ class BinaryTraining:
         print("Vectorizing...")
         return self.vectorizer.fit_transform(X_train)
 
-    def _binarize_classification(self):
+    def _binarize_classification(self, series):
         if (self.other_themes_value in series or 0 in series) and len(series) == 1:
             return 0
         return 1
@@ -203,7 +206,7 @@ class BinaryTraining:
     #        clear_output(wait=True)
 
     def predict(self):
-        return self.mo_classifier.predict(self._vectorize(self.X_test).todense())
+        return self.classifier.predict(self._vectorize(self.X_test).todense())
 
     def set_X_test(self, X):
         self.X_test = X
