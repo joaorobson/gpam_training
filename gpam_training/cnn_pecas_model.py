@@ -45,7 +45,7 @@ class PecasModel:
         tokenizer = GpamTokenizer(self.vocab, X_train)
         return tokenizer.tokenizer_with_vocab(shape)
 
-    def train(self, split_df=False, batch_size=500, epochs=20):
+    def train(self, split_df=False, batch_size=500, epochs=50):
         print("Training...")
         X_train, Y_train = (self.dataframe[BODY], self.dataframe[TYPE_PECAS])
 
