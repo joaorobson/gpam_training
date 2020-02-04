@@ -71,32 +71,38 @@ def binarize_pred(preds):
 
 def cnn_pecas_model(n_class, max_features, sequence_len, embedding_out):
     model = keras.Sequential()
-    model.add(keras.layers.Embedding(
-        input_dim=max_features,
-        output_dim=embedding_out,
-        input_length=sequence_len))
+    model.add(
+        keras.layers.Embedding(
+            input_dim=max_features, output_dim=embedding_out, input_length=sequence_len
+        )
+    )
 
-    model.add(keras.layers.Conv1D(kernel_size=4, filters=256, padding='same'))
+    model.add(keras.layers.Conv1D(kernel_size=4, filters=256, padding="same"))
     model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.MaxPooling1D(pool_size=2))
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(512, activation='relu'))
+    model.add(keras.layers.Dense(512, activation="relu"))
     model.add(keras.layers.Dropout(0.5))
-    model.add(keras.layers.Dense(n_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam',
-                  metrics=['accuracy'])
+    model.add(keras.layers.Dense(n_class, activation="softmax"))
+    model.compile(
+        loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+    )
 
     return model
 
+
 def cnn_pecas_model2(n_class, max_features, sequence_len, embedding_out):
-    f1_base = keras.layers.Input(shape=(sequence_len, ), dtype='int32')
-    text_embedding = keras.layers.Embedding(input_dim=max_features, output_dim=embedding_out,
-                               input_length=sequence_len)(f1_base)
+    f1_base = keras.layers.Input(shape=(sequence_len,), dtype="int32")
+    text_embedding = keras.layers.Embedding(
+        input_dim=max_features, output_dim=embedding_out, input_length=sequence_len
+    )(f1_base)
 
     filter_sizes = [3, 4, 5]
     convs = []
     for filter_size in filter_sizes:
-        l_conv = keras.layers.Conv1D(filters=256, kernel_size=filter_size, padding='same', activation='relu')(text_embedding)
+        l_conv = keras.layers.Conv1D(
+            filters=256, kernel_size=filter_size, padding="same", activation="relu"
+        )(text_embedding)
         l_batch = keras.layers.BatchNormalization()(l_conv)
         l_pool = keras.layers.MaxPooling1D(2)(l_conv)
 
@@ -105,13 +111,15 @@ def cnn_pecas_model2(n_class, max_features, sequence_len, embedding_out):
     l_merge = keras.layers.Concatenate(axis=1)(convs)
     l_pool1 = keras.layers.MaxPooling1D(50)(l_merge)
     l_flat = keras.layers.Flatten()(l_pool1)
-    l_dense = keras.layers.Dense(128, activation='relu')(l_flat)
+    l_dense = keras.layers.Dense(128, activation="relu")(l_flat)
     x = keras.layers.Dropout(0.5)(l_dense)
-    #f1_x = Flatten()(f1_x)
-    x = keras.layers.Dense(n_class, activation='softmax')(x)
+    # f1_x = Flatten()(f1_x)
+    x = keras.layers.Dense(n_class, activation="softmax")(x)
     model = keras.models.Model(inputs=f1_base, outputs=x)
     # determine Loss function and Optimizer
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(
+        loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+    )
     return model
 
 
@@ -130,6 +138,6 @@ class Y_transform:
 
 class CallBack(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
-        if(logs.get('acc') and logs.get('acc') >= 0.98):
+        if logs.get("acc") and logs.get("acc") >= 0.98:
             print("\nReached 95% accuracy so cancelling training!")
             self.model.stop_training = True

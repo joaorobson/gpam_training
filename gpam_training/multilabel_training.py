@@ -191,6 +191,6 @@ class MultilabelTraining:
 
     def set_y_test(self, y):
         self.y_test = y
-        
+
     def get_pickle(self):
         return pickle.dumps(self.mo_classifier)

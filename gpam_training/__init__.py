@@ -3,6 +3,7 @@ Module to facilitate the integration of a sklearn training pipeline into a deplo
 """
 
 from .multilabel_training import MultilabelTraining
+from .binary_training import BinaryTraining
 from .metrics import *
 from .cnn_pecas_model import PecasModel
 
