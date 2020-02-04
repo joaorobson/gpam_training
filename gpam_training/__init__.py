@@ -7,4 +7,4 @@ from .binary_training import BinaryTraining
 from .metrics import *
 from .cnn_pecas_model import PecasModel
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
