@@ -8,7 +8,6 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.model_selection import train_test_split
-from fastparquet import ParquetFile
 from xgboost import XGBClassifier
 from IPython.display import clear_output
 
@@ -162,26 +161,6 @@ class MultilabelTraining:
             self.mo_classifier.partial_fit(vector, y_train, classes=classes)
             skiprows += nrows
             print("{} rows already trained\n".format(skiprows - 1))
-
-    def incremental_train_with_parquet(self, parquet_path):
-        print("Training incrementally with parquet...")
-        nrows = 0
-        pf = ParquetFile(parquet_path)
-        classes, labels_freq = DataframePreprocessing(
-            target_themes=self.target_themes
-        ).get_unique_binarized_labels(parquet_path, "tema", True)
-        for df in pf.iter_row_groups():
-            df = df.reset_index()
-            self._update_dataframe(df, is_parquet=True, labels_freq=labels_freq)
-            X_train, y_train = (
-                self.df[self.x_column_name],
-                self.df[self.target_themes + [self.other_themes_value]],
-            )
-            vector = self._vectorize(X_train)
-            self.mo_classifier.partial_fit(vector.toarray(), y_train, classes=classes)
-            nrows += len(self.df)
-            print("{} rows already trained\n".format(nrows))
-            clear_output(wait=True)
 
     def predict(self):
         return self.mo_classifier.predict(self._vectorize(self.X_test).todense())
