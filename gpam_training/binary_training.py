@@ -9,7 +9,6 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.model_selection import train_test_split
-from fastparquet import ParquetFile
 from xgboost import XGBClassifier
 from IPython.display import clear_output
 
