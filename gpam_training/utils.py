@@ -135,6 +135,9 @@ class Y_transform:
         y_temp = tf.keras.utils.to_categorical(y_temp)
         return y_temp
 
+    def classes(self):
+        return self.le.classes_
+
 
 class CallBack(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):

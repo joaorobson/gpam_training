@@ -50,6 +50,7 @@ class PecasModel:
         self.classifier.fit(
             vector, Y_train, batch_size=batch_size, epochs=epochs, callbacks=[callback]
         )
+        self.classes = y_transform.classes()
         if split_df:
             return self.metrics(X_test, Y_test)
 
@@ -60,6 +61,9 @@ class PecasModel:
         weights = weights_file.read()
         weights_file.close()
         return model, weights
+
+    def get_classes(self):
+        return self.classes
 
     def metrics(self, X_test, Y_test):
         X_test = self._tokenize(X_test)
