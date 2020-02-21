@@ -8,4 +8,4 @@ from .metrics import *
 from .cnn_pecas_model import PecasModel
 from .utils import *
 
-__version__ = "0.0.15"
+__version__ = "0.0.16"
