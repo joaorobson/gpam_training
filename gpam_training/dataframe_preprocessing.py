@@ -85,6 +85,9 @@ class DataframePreprocessing:
 
             self.target_themes.sort()
             self.labels_freq = {}
+            self.df[self.y_column_name] = self.df[self.y_column_name].apply(
+                self._remove_with_without_theme_mixture
+            )
 
             if not labels_freq:
                 self._set_labels_frequency()
@@ -138,7 +141,7 @@ class DataframePreprocessing:
         reduced[self.y_column_name] = temas[~np.isnan(temas)]
         return pd.Series(reduced, index=[self.x_column_name, *[self.y_column_name]])
 
-    def _remove_rare_samples(self, series, threshold=5):
+    def _remove_rare_samples(self, series, threshold=1):
         if self.labels_freq.get(tuple(series.tolist())) < threshold:
             return False
         return True
@@ -153,7 +156,7 @@ class DataframePreprocessing:
         for theme in actual_label:
             if theme not in self.target_themes:
                 modified_label.add(self.other_themes_value)
-            elif theme != 0:
+            else:
                 modified_label.add(theme)
         return sorted(modified_label)
 
@@ -260,9 +263,6 @@ class DataframePreprocessing:
 
     def _process_dataframe(self):
         self.df = self.df[~pd.isnull(self.df[self.x_column_name])]
-        self.df[self.y_column_name] = self.df[self.y_column_name].apply(
-            self._remove_with_without_theme_mixture
-        )
 
         if self.remove_processes_without_theme:
             self.df = self.df[
