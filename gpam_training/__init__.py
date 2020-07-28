@@ -5,7 +5,5 @@ Module to facilitate the integration of a sklearn training pipeline into a deplo
 from .multilabel_training import MultilabelTraining
 from .binary_training import BinaryTraining
 from .metrics import *
-from .cnn_pecas_model import PecasModel
-from .utils import *
 
-__version__ = "0.0.14"
+__version__ = "0.0.15"

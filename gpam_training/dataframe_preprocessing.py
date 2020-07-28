@@ -55,6 +55,7 @@ class DataframePreprocessing:
         is_parquet=False,
         labels_freq={},
         vocab_path="",
+        freq_threshold=2
     ):
         self.is_incremental_training = is_incremental_training
         self.remove_processes_without_theme = remove_processes_without_theme
@@ -65,6 +66,7 @@ class DataframePreprocessing:
         self.target_themes = target_themes
         self.group_processes = group_processes
         self.vocab_path = vocab_path
+        self.freq_threshold = freq_threshold
 
         self.distinct_themes = target_themes + [other_themes_value]
         if not df.empty:
@@ -85,6 +87,9 @@ class DataframePreprocessing:
 
             self.target_themes.sort()
             self.labels_freq = {}
+            self.df[self.y_column_name] = self.df[self.y_column_name].apply(
+                self._remove_with_without_theme_mixture
+            )
 
             if not labels_freq:
                 self._set_labels_frequency()
@@ -138,8 +143,8 @@ class DataframePreprocessing:
         reduced[self.y_column_name] = temas[~np.isnan(temas)]
         return pd.Series(reduced, index=[self.x_column_name, *[self.y_column_name]])
 
-    def _remove_rare_samples(self, series, threshold=5):
-        if self.labels_freq.get(tuple(series.tolist())) < threshold:
+    def _remove_rare_samples(self, series):
+        if self.labels_freq.get(tuple(series.tolist())) < self.freq_threshold:
             return False
         return True
 
@@ -153,7 +158,8 @@ class DataframePreprocessing:
         for theme in actual_label:
             if theme not in self.target_themes:
                 modified_label.add(self.other_themes_value)
-            elif theme != 0:
+            else:
+#elif theme != 0:
                 modified_label.add(theme)
         return sorted(modified_label)
 
@@ -260,9 +266,6 @@ class DataframePreprocessing:
 
     def _process_dataframe(self):
         self.df = self.df[~pd.isnull(self.df[self.x_column_name])]
-        self.df[self.y_column_name] = self.df[self.y_column_name].apply(
-            self._remove_with_without_theme_mixture
-        )
 
         if self.remove_processes_without_theme:
             self.df = self.df[

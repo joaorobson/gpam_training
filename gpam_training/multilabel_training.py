@@ -61,6 +61,7 @@ class MultilabelTraining:
         remove_processes_without_theme=True,
         is_incremental_training=False,
         vocab_path="",
+        freq_threshold=2
     ):
         self.is_incremental_training = is_incremental_training
         self.vocab_path = vocab_path
@@ -73,6 +74,7 @@ class MultilabelTraining:
         self.group_processes = group_processes
         self.x_column_name = x_column_name
         self._initialize_dataframe(df)
+        self.freq_threshold = freq_threshold
 
     def _initialize_dataframe(self, df):
         if not df.empty:
@@ -85,6 +87,7 @@ class MultilabelTraining:
                 is_incremental_training=self.is_incremental_training,
                 remove_processes_without_theme=self.remove_processes_without_theme,
                 vocab_path=self.vocab_path,
+                freq_threshold=self.freq_threshold
             )
             self.y_columns_names = self.dp.distinct_themes
             self.df = self.dp.processed_df
@@ -132,6 +135,7 @@ class MultilabelTraining:
             is_parquet=is_parquet,
             vocab_path=self.vocab_path,
             labels_freq=labels_freq,
+            freq_threshold=self.freq_threshold
         )
         self.df = self.dp.processed_df
 
